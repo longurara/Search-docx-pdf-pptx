@@ -280,8 +280,7 @@
         border-bottom: 1px solid rgba(122, 167, 255, 0.15);
       }
       .viewer canvas {
-        width: 100%;
-        height: auto;
+        display: block;
         background: #fff;
       }
       .kbd {
@@ -401,10 +400,10 @@
             id="fileInput"
             type="file"
             multiple
-            accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            accept=".pdf,.pptx,.docx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           />
           <div style="font-weight: 600">
-            Kéo‑thả hoặc <u>chọn tệp</u> (PDF, PPTX)
+            Kéo‑thả hoặc <u>chọn tệp</u> (PDF, PPTX, DOCX)
           </div>
           <div class="hint">
             Mọi xử lý diễn ra trên trình duyệt (offline được nếu CDN đã cache).
@@ -420,8 +419,8 @@
         </div>
         <div class="files" id="fileList" style="margin-top: 12px"></div>
         <div style="margin-top: 12px" class="muted">
-          Mẹo: Có thể nạp nhiều tệp một lúc. PDF sẽ hiển thị trang, PPTX hiển
-          thị số slide.
+          Mẹo: Có thể nạp nhiều tệp một lúc. PDF hiển thị trang, PPTX hiển thị
+          slide, DOCX hiển thị theo đoạn.
         </div>
       </aside>
 
@@ -573,7 +572,7 @@
       const i18n = {
         vi: {
           subtitle:
-            "Tải tài liệu (PDF, PPTX), nhập từ khóa, xem kết quả kèm số trang/slide.",
+            "Tải tài liệu (PDF, PPTX, DOCX), nhập từ khóa, xem kết quả kèm số trang/slide/đoạn.",
           files: "Tệp & Chỉ mục",
           search: "Tìm kiếm",
           choose: "Chọn tệp…",
@@ -586,11 +585,11 @@
           exportBtn: "Xuất CSV",
           noRes: "Chưa có kết quả.",
           haveRes: (n) => `${n} kết quả`,
-          dropHint: "Kéo‑thả hoặc chọn tệp (PDF, PPTX)",
+          dropHint: "Kéo‑thả hoặc chọn tệp (PDF, PPTX, DOCX)",
         },
         en: {
           subtitle:
-            "Load documents (PDF, PPTX), search and see page/slide numbers.",
+            "Load documents (PDF, PPTX, DOCX), search and see page/slide/paragraph numbers.",
           files: "Files & Index",
           search: "Search",
           choose: "Choose files…",
@@ -603,7 +602,7 @@
           exportBtn: "Export CSV",
           noRes: "No results yet.",
           haveRes: (n) => `${n} results`,
-          dropHint: "Drag & drop or pick files (PDF, PPTX)",
+          dropHint: "Drag & drop or pick files (PDF, PPTX, DOCX)",
         },
       };
       function setLang(lang) {
@@ -625,7 +624,7 @@
       function addFiles(fileList) {
         for (const file of fileList) {
           const ext = file.name.toLowerCase().split(".").pop();
-          if (!["pdf", "pptx"].includes(ext)) continue;
+          if (!["pdf", "pptx", "docx"].includes(ext)) continue;
           state.files.push({
             file,
             name: file.name,
@@ -643,8 +642,8 @@
           const div = document.createElement("div");
           div.className = "file";
           div.innerHTML = `<span class="type">${f.type.toUpperCase()}</span>
-        <div style="flex:1">${escapeHtml(f.name)}</div>
-        <div class="muted">${(f.size / 1024 / 1024).toFixed(2)} MB</div>`;
+              <div style="flex:1">${escapeHtml(f.name)}</div>
+              <div class="muted">${(f.size / 1024 / 1024).toFixed(2)} MB</div>`;
           box.appendChild(div);
         }
         state.built = false;
@@ -659,12 +658,12 @@
         const hasPdfJs = typeof pdfjsLib !== "undefined";
         if (!hasPdfJs) {
           console.warn(
-            "PDF.js not loaded: PDF files will be skipped. PPTX still supported."
+            "PDF.js not loaded: PDF files will be skipped. PPTX/DOCX still supported."
           );
           const dropHint = document.querySelector("#drop .hint");
           if (dropHint) {
             dropHint.textContent =
-              "PDF.js chưa sẵn sàng: vẫn có thể lập chỉ mục PPTX. PDF sẽ bị bỏ qua.";
+              "PDF.js chưa sẵn sàng: vẫn có thể lập chỉ mục PPTX/DOCX. PDF sẽ bị bỏ qua.";
             dropHint.style.color = "var(--danger)";
           }
         }
@@ -676,7 +675,6 @@
           const f = state.files[i];
           if (f.type === "pdf") {
             if (!hasPdfJs) {
-              // Skip PDF indexing gracefully
               state.docs.push({
                 id: crypto.randomUUID(),
                 name: f.name + " (PDF không lập chỉ mục)",
@@ -705,27 +703,44 @@
           } else if (f.type === "pptx") {
             const arrayBuf = await f.file.arrayBuffer();
             const zip = await JSZip.loadAsync(arrayBuf);
-            // Read slides: ppt/slides/slide1.xml ... + rels for order
             const slides = [];
             const slideFiles = Object.keys(zip.files)
               .filter(
                 (k) => k.startsWith("ppt/slides/slide") && k.endsWith(".xml")
               )
               .sort((a, b) => {
-                // sort by number
                 const na = parseInt(a.match(/slide(\d+)\.xml/)[1]);
                 const nb = parseInt(b.match(/slide(\d+)\.xml/)[1]);
                 return na - nb;
               });
             for (const path of slideFiles) {
               const xml = await zip.files[path].async("string");
-              // Extract <a:t>text</a:t>
-              const texts = Array.from(
-                xml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/g)
-              )
-                .map((m) => m[1])
-                .map((s) => s.replace(/\s+/g, " ").trim());
-              slides.push({ index: slides.length + 1, text: texts.join(" ") });
+              const dom = new DOMParser().parseFromString(
+                xml,
+                "application/xml"
+              );
+              const paras = Array.from(dom.getElementsByTagNameNS("*", "p"));
+              const lines = [];
+              for (const pEl of paras) {
+                let line = "";
+                for (const child of Array.from(pEl.childNodes)) {
+                  if (child.nodeType === 1) {
+                    const ln = child.localName || child.nodeName;
+                    if (ln === "br") {
+                      line += "\n";
+                    } else if (ln === "r" || ln === "fld") {
+                      const tNodes = child.getElementsByTagNameNS("*", "t");
+                      for (const t of Array.from(tNodes)) {
+                        line += (t.textContent || "").replace(/\s+/g, " ");
+                      }
+                    }
+                  }
+                }
+                line = line.replace(/\s+$/g, "").replace(/^\s+/g, "");
+                if (line.length) lines.push(line);
+              }
+              const text = lines.join("\n");
+              slides.push({ index: slides.length + 1, text });
             }
             state.docs.push({
               id: crypto.randomUUID(),
@@ -734,14 +749,62 @@
               pages: slides,
               _pptx: true,
             });
+          } else if (f.type === "docx") {
+            const arrayBuf = await f.file.arrayBuffer();
+            const zip = await JSZip.loadAsync(arrayBuf);
+            const entry = zip.files["word/document.xml"];
+            let paragraphs = [];
+            if (entry) {
+              const xml = await entry.async("string");
+              const dom = new DOMParser().parseFromString(
+                xml,
+                "application/xml"
+              );
+              const pNodes = Array.from(dom.getElementsByTagNameNS("*", "p"));
+              for (const pNode of pNodes) {
+                let line = "";
+                for (const node of Array.from(pNode.childNodes)) {
+                  if (node.nodeType === 1) {
+                    const ln = node.localName || node.nodeName;
+                    if (ln === "r") {
+                      const tNodes = node.getElementsByTagNameNS("*", "t");
+                      for (const t of Array.from(tNodes)) {
+                        const txt = (t.textContent || "").replace(/\s+/g, " ");
+                        line += txt;
+                      }
+                      if (node.getElementsByTagNameNS("*", "tab").length)
+                        line += "\t";
+                      if (node.getElementsByTagNameNS("*", "br").length)
+                        line += "\n";
+                    } else if (ln === "br") {
+                      line += "\n";
+                    } else if (ln === "tab") {
+                      line += "\t";
+                    }
+                  }
+                }
+                line = line.replace(/\s+$/g, "").replace(/^\s+/g, "");
+                paragraphs.push(line);
+              }
+            }
+            const pages = paragraphs.map((text, i) => ({ index: i + 1, text }));
+            state.docs.push({
+              id: crypto.randomUUID(),
+              name: f.name,
+              type: "docx",
+              pages,
+              _docx: true,
+            });
           }
         }
+
         state.built = true;
         $("#idxState").textContent = i18n[$("#lang").value].idxDone;
         $("#searchBtn").disabled = false;
         $("#exportBtn").disabled = false;
       }
 
+      // ========= Search =========
       // ========= Search =========
       function normalizeForMatch(s, diacritic, caseSensitive) {
         let t = s || "";
@@ -869,24 +932,27 @@
         for (const it of items) {
           const el = document.createElement("div");
           el.className = "result";
-          const tag = it.type === "pdf" ? "PDF" : "PPTX";
+          const tag =
+            it.type === "pdf" ? "PDF" : it.type === "pptx" ? "PPTX" : "DOCX";
           const label =
             it.type === "pdf"
               ? `Trang ${it.pageIndex}`
-              : `Slide ${it.pageIndex}`;
+              : it.type === "pptx"
+              ? `Slide ${it.pageIndex}`
+              : `Đoạn ${it.pageIndex}`;
           el.innerHTML = `
-        <div class="meta">
-          <div class="tag">${tag}</div>
-          <div class="title">${escapeHtml(it.docName)}</div>
-          <div class="muted">${escapeHtml(label)}</div>
-        </div>
-        <div style="flex:1">
-          <div class="snippet">${it.snippet}</div>
-          <div style="margin-top:8px; display:flex; gap:8px">
-            <button class="btn secondary" data-open>Open</button>
-            <span class="muted">${it.count} hit(s)</span>
-          </div>
-        </div>`;
+              <div class="meta">
+                <div class="tag">${tag}</div>
+                <div class="title">${escapeHtml(it.docName)}</div>
+                <div class="muted">${escapeHtml(label)}</div>
+              </div>
+              <div style="flex:1">
+                <div class="snippet">${it.snippet}</div>
+                <div style="margin-top:8px; display:flex; gap:8px">
+                  <button class="btn secondary" data-open>Open</button>
+                  <span class="muted">${it.count} hit(s)</span>
+                </div>
+              </div>`;
           el.querySelector("[data-open]").addEventListener("click", () =>
             openViewer(it.docId, it.pageIndex)
           );
@@ -900,7 +966,7 @@
         if (!doc) return;
         $("#viewerModal").style.display = "flex";
         $("#viewerTitle").textContent = `${doc.name} — ${
-          doc.type === "pdf" ? "Trang" : "Slide"
+          doc.type === "pdf" ? "Trang" : doc.type === "pptx" ? "Slide" : "Đoạn"
         } ${pageIndex}`;
         state.currentView = { docId, pageIndex };
 
@@ -908,13 +974,22 @@
           $("#pptxContainer").style.display = "none";
           $("#pdfContainer").style.display = "flex";
           renderPdfPage(doc, pageIndex);
+        } else if (doc.type === "pptx") {
+          $("#pdfContainer").style.display = "none";
+          $("#pptxContainer").style.display = "block";
+          const pg = doc.pages.find((p) => p.index === pageIndex);
+          $(
+            "#pptxContainer"
+          ).innerHTML = `<div class="muted">Văn bản trong slide:</div><div style="margin-top:8px; white-space: pre-wrap">${escapeHtml(
+            pg?.text || ""
+          )}</div>`;
         } else {
           $("#pdfContainer").style.display = "none";
           $("#pptxContainer").style.display = "block";
           const pg = doc.pages.find((p) => p.index === pageIndex);
           $(
             "#pptxContainer"
-          ).innerHTML = `<div class="muted">Văn bản trong slide:</div><div style="margin-top:8px">${escapeHtml(
+          ).innerHTML = `<div class="muted">Văn bản trong đoạn DOCX:</div><div style="margin-top:8px; white-space: pre-wrap">${escapeHtml(
             pg?.text || ""
           )}</div>`;
         }
@@ -922,10 +997,33 @@
       async function renderPdfPage(doc, pageIndex) {
         const canvas = $("#pdfCanvas");
         const ctx = canvas.getContext("2d");
+
+        // Get page at native (scale=1) to know its size
         const page = await doc.pages[pageIndex - 1]._pdfDoc.getPage(pageIndex);
-        const viewport = page.getViewport({ scale: 1.5 });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        const baseViewport = page.getViewport({ scale: 1 });
+
+        // Compute fit-to-page scale based on container size
+        const container = $("#pdfContainer");
+        // Account for container padding (8px left/right + top/bottom)
+        const availW = Math.max(100, container.clientWidth - 16);
+        const availH = Math.max(100, container.clientHeight - 16);
+
+        const scaleW = availW / baseViewport.width;
+        const scaleH = availH / baseViewport.height;
+        const scale = Math.min(scaleW, scaleH); // fit whole page
+
+        const viewport = page.getViewport({ scale });
+
+        // HiDPI rendering
+        const ratio = Math.max(1, window.devicePixelRatio || 1);
+        canvas.width = Math.floor(viewport.width * ratio);
+        canvas.height = Math.floor(viewport.height * ratio);
+        // CSS pixel size exactly equals viewport size (fit-to-page)
+        canvas.style.width = Math.floor(viewport.width) + "px";
+        canvas.style.height = Math.floor(viewport.height) + "px";
+
+        // Reset transform, then scale for HiDPI
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         await page.render({ canvasContext: ctx, viewport }).promise;
       }
 
