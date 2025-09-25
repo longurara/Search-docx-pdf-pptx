@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tra Tài Liệu — PDF & PPTX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0b1220;
+        --card: #121a2b;
+        --muted: #9bb0d3;
+        --text: #e8f0ff;
+        --accent: #6aa8ff;
+        --accent-2: #7c4dff;
+        --danger: #ff6b6b;
+        --ok: #2ecc71;
+        --ring: rgba(122, 167, 255, 0.5);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          Helvetica, sans-serif;
+        background: radial-gradient(
+            1200px 800px at 80% -10%,
+            rgba(124, 77, 255, 0.15),
+            transparent 60%
+          ),
+          radial-gradient(
+            1200px 800px at 0% 100%,
+            rgba(106, 168, 255, 0.15),
+            transparent 60%
+          ),
+          var(--bg);
+        color: var(--text);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: saturate(1.2) blur(8px);
+        background: linear-gradient(
+          to bottom,
+          rgba(11, 18, 32, 0.9),
+          rgba(11, 18, 32, 0.6)
+        );
+        border-bottom: 1px solid rgba(122, 167, 255, 0.15);
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.3px;
+      }
+      .sub {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+      @media (min-width: 960px) {
+        .grid {
+          grid-template-columns: 320px 1fr;
+        }
+      }
+
+      .card {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.02),
+            transparent 40%
+          ),
+          var(--card);
+        border: 1px solid rgba(122, 167, 255, 0.15);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+
+      .drop {
+        border: 1.5px dashed rgba(122, 167, 255, 0.35);
+        border-radius: 14px;
+        padding: 18px;
+        text-align: center;
+        color: var(--muted);
+      }
+      .drop.drag {
+        border-color: var(--accent);
+        background: rgba(106, 168, 255, 0.08);
+        color: var(--text);
+      }
+      .drop input {
+        display: none;
+      }
+      .drop .hint {
+        font-size: 12px;
+        margin-top: 6px;
+        color: var(--muted);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #0c1529;
+        border: 1px solid rgba(122, 167, 255, 0.2);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .controls .sp {
+        flex: 1 1 220px;
+      }
+      input[type="text"],
+      select {
+        width: 100%;
+        background: #0b1426;
+        border: 1px solid rgba(122, 167, 255, 0.25);
+        border-radius: 12px;
+        color: var(--text);
+        padding: 10px 12px;
+        outline: none;
+        box-shadow: 0 0 0 0 var(--ring);
+        transition: box-shadow 0.15s, border-color 0.15s;
+      }
+      input[type="text"]:focus,
+      select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--ring);
+      }
+      .btn {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 10px 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(108, 142, 255, 0.25);
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.secondary {
+        background: #0c1529;
+        border: 1px solid rgba(122, 167, 255, 0.25);
+        box-shadow: none;
+        color: var(--text);
+      }
+
+      .files {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 260px;
+        overflow: auto;
+      }
+      .file {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid rgba(122, 167, 255, 0.15);
+        background: #0b1426;
+        border-radius: 12px;
+        font-size: 13px;
+      }
+      .file .type {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: #13203b;
+        color: #c8dcff;
+      }
+      .file .ok {
+        color: var(--ok);
+      }
+
+      .result {
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid rgba(122, 167, 255, 0.15);
+        background: #0b1426;
+        border-radius: 12px;
+      }
+      .result .meta {
+        min-width: 160px;
+      }
+      .result .meta .tag {
+        font-size: 11px;
+        background: #13203b;
+        color: #c8dcff;
+        padding: 3px 6px;
+        border-radius: 6px;
+        display: inline-block;
+      }
+      .result .title {
+        font-weight: 600;
+      }
+      .result .snippet {
+        white-space: pre-wrap;
+        color: #c3d6ff;
+        font-size: 13px;
+      }
+      mark {
+        background: #ffe08a;
+        color: #1a1a1a;
+        padding: 0 2px;
+        border-radius: 4px;
+      }
+
+      .results {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 60vh;
+        overflow: auto;
+      }
+      .muted {
+        color: var(--muted);
+      }
+
+      .viewerModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+      .viewer {
+        width: min(95vw, 900px);
+        height: min(90vh, 90vh);
+        background: var(--card);
+        border: 1px solid rgba(122, 167, 255, 0.25);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .viewer .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(122, 167, 255, 0.15);
+      }
+      .viewer canvas {
+        width: 100%;
+        height: auto;
+        background: #fff;
+      }
+      .kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        background: #0c1529;
+        border: 1px solid rgba(122, 167, 255, 0.25);
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+
+      .footer {
+        padding: 16px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+      }
+    </style>
+    <!-- PDF.js will be loaded dynamically with fallback CDNs -->
+    <!-- JSZip for PPTX parsing -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"
+      defer
+    ></script>
+
+    <!-- Robust PDF.js loader with CDN fallbacks -->
+    <script>
+      (function () {
+        const sources = [
+          {
+            lib: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+            worker:
+              "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+          },
+          {
+            lib: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",
+            worker:
+              "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
+          },
+          {
+            lib: "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js",
+            worker:
+              "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
+          },
+        ];
+
+        function loadScript(url) {
+          return new Promise((resolve, reject) => {
+            const s = document.createElement("script");
+            s.src = url;
+            s.onload = () => resolve(url);
+            s.onerror = () => reject(new Error("Failed to load " + url));
+            document.head.appendChild(s);
+          });
+        }
+
+        (async () => {
+          for (const src of sources) {
+            try {
+              await loadScript(src.lib);
+              if (window.pdfjsLib) {
+                try {
+                  window.pdfjsLib.GlobalWorkerOptions.workerSrc = src.worker;
+                } catch (e) {
+                  console.warn(
+                    "Setting workerSrc failed, but PDF.js loaded:",
+                    e
+                  );
+                }
+                document.dispatchEvent(new CustomEvent("pdfjs-ready"));
+                return;
+              }
+            } catch (e) {
+              console.warn(e && e.message ? e.message : e);
+            }
+          }
+          console.error(
+            "PDF.js could not be loaded from any CDN. PDF functionality will be limited."
+          );
+          document.dispatchEvent(new CustomEvent("pdfjs-failed"));
+        })();
+      })();
+    </script>
+  </head>
+  <body>
+    <header>
+      <div
+        class="wrap"
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        "
+      >
+        <div>
+          <h1>Tra Tài Liệu — PDF & PPTX</h1>
+          <div class="sub" id="subtitle">
+            Tải tài liệu (PDF, PPTX), nhập từ khóa, xem kết quả kèm số
+            trang/slide.
+          </div>
+        </div>
+        <div class="controls" style="gap: 8px">
+          <select id="lang">
+            <option value="vi">Tiếng Việt</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap grid">
+      <aside class="card">
+        <h2 id="sec_files">Tệp & Chỉ mục</h2>
+        <div class="drop" id="drop">
+          <input
+            id="fileInput"
+            type="file"
+            multiple
+            accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          />
+          <div style="font-weight: 600">
+            Kéo‑thả hoặc <u>chọn tệp</u> (PDF, PPTX)
+          </div>
+          <div class="hint">
+            Mọi xử lý diễn ra trên trình duyệt (offline được nếu CDN đã cache).
+          </div>
+          <div style="margin-top: 10px">
+            <button class="btn secondary" id="chooseBtn">Chọn tệp…</button>
+          </div>
+        </div>
+        <div style="margin-top: 12px" class="controls">
+          <span class="pill" id="idxState">Chỉ mục: chưa tạo</span>
+          <button class="btn" id="buildBtn" disabled>Xây chỉ mục</button>
+          <button class="btn secondary" id="clearBtn">Xóa tệp</button>
+        </div>
+        <div class="files" id="fileList" style="margin-top: 12px"></div>
+        <div style="margin-top: 12px" class="muted">
+          Mẹo: Có thể nạp nhiều tệp một lúc. PDF sẽ hiển thị trang, PPTX hiển
+          thị số slide.
+        </div>
+      </aside>
+
+      <main class="card">
+        <h2 id="sec_search">Tìm kiếm</h2>
+        <div class="controls" style="margin-bottom: 10px">
+          <div class="sp">
+            <input
+              id="q"
+              type="text"
+              placeholder="Nhập từ khóa… (không phân biệt dấu nếu bật)"
+            />
+          </div>
+          <button class="btn" id="searchBtn" disabled>Tìm</button>
+          <button class="btn secondary" id="exportBtn" disabled>
+            Xuất CSV
+          </button>
+        </div>
+        <div class="controls" style="gap: 12px; margin-bottom: 12px">
+          <label class="pill"
+            ><input
+              type="checkbox"
+              id="optDiacritic"
+              checked
+              style="margin-right: 6px"
+            />Bỏ dấu tiếng Việt</label
+          >
+          <label class="pill"
+            ><input
+              type="checkbox"
+              id="optCase"
+              style="margin-right: 6px"
+            />Phân biệt HOA/thường</label
+          >
+          <label class="pill"
+            ><input
+              type="checkbox"
+              id="optWhole"
+              style="margin-right: 6px"
+            />Khớp nguyên từ</label
+          >
+          <span class="muted" id="countInfo">Chưa có kết quả.</span>
+        </div>
+        <div class="results" id="results"></div>
+      </main>
+    </div>
+
+    <div class="viewerModal" id="viewerModal" role="dialog" aria-modal="true">
+      <div class="viewer">
+        <div class="bar">
+          <div id="viewerTitle" style="font-weight: 600">Xem trang</div>
+          <div style="display: flex; gap: 8px; align-items: center">
+            <span class="kbd">PgUp</span>
+            <span class="kbd">PgDn</span>
+            <button class="btn secondary" id="closeViewer">Đóng</button>
+          </div>
+        </div>
+        <div
+          id="pdfContainer"
+          style="
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+          "
+        >
+          <canvas id="pdfCanvas"></canvas>
+        </div>
+        <div
+          id="pptxContainer"
+          style="
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+            display: none;
+            white-space: pre-wrap;
+          "
+        ></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      © 2025 — Tra Tài Liệu. Hỗ trợ tiếng Việt (bỏ dấu), hoạt động 100% trên
+      client.
+    </div>
+
+    <script>
+      // Configure PDF.js worker - updated: rely on dynamic loader events.
+      if (typeof pdfjsLib !== "undefined") {
+        try {
+          // workerSrc is set by the dynamic loader; keep this as a no-op safety.
+          pdfjsLib.GlobalWorkerOptions.workerSrc =
+            pdfjsLib.GlobalWorkerOptions.workerSrc || "";
+        } catch {}
+      } else {
+        console.warn(
+          "PDF.js not yet loaded at parse time; will proceed and enable PPTX-only if needed."
+        );
+        // Do NOT disable build/search buttons here; dynamic loader will handle readiness.
+      }
+
+      // ========= Utilities =========
+      const $ = (sel) => document.querySelector(sel);
+      const stripVi = (s) => {
+        if (!s) return "";
+        // Normalize accents, map đ/Đ
+        return s
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/đ/g, "d")
+          .replace(/Đ/g, "D");
+      };
+      const escapeHtml = (s) =>
+        s.replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[c])
+        );
+      const downloadBlob = (
+        content,
+        filename,
+        type = "text/csv;charset=utf-8"
+      ) => {
+        const blob = new Blob([content], { type });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      };
+
+      // ========= State =========
+      const state = {
+        files: [], // {file, type:'pdf'|'pptx', name, size}
+        docs: [], // per file: {id, name, type, pages:[{index, text}], pdf?}
+        built: false,
+        currentView: null, // {docId, pageIndex}
+      };
+
+      // ========= i18n =========
+      const i18n = {
+        vi: {
+          subtitle:
+            "Tải tài liệu (PDF, PPTX), nhập từ khóa, xem kết quả kèm số trang/slide.",
+          files: "Tệp & Chỉ mục",
+          search: "Tìm kiếm",
+          choose: "Chọn tệp…",
+          build: "Xây chỉ mục",
+          clear: "Xóa tệp",
+          idxIdle: "Chỉ mục: chưa tạo",
+          idxBuilding: "Đang xây chỉ mục…",
+          idxDone: "Chỉ mục: đã tạo",
+          searchBtn: "Tìm",
+          exportBtn: "Xuất CSV",
+          noRes: "Chưa có kết quả.",
+          haveRes: (n) => `${n} kết quả`,
+          dropHint: "Kéo‑thả hoặc chọn tệp (PDF, PPTX)",
+        },
+        en: {
+          subtitle:
+            "Load documents (PDF, PPTX), search and see page/slide numbers.",
+          files: "Files & Index",
+          search: "Search",
+          choose: "Choose files…",
+          build: "Build Index",
+          clear: "Clear files",
+          idxIdle: "Index: not built",
+          idxBuilding: "Building index…",
+          idxDone: "Index: ready",
+          searchBtn: "Search",
+          exportBtn: "Export CSV",
+          noRes: "No results yet.",
+          haveRes: (n) => `${n} results`,
+          dropHint: "Drag & drop or pick files (PDF, PPTX)",
+        },
+      };
+      function setLang(lang) {
+        $("#subtitle").textContent = i18n[lang].subtitle;
+        $("#sec_files").textContent = i18n[lang].files;
+        $("#sec_search").textContent = i18n[lang].search;
+        $("#chooseBtn").textContent = i18n[lang].choose;
+        $("#buildBtn").textContent = i18n[lang].build;
+        $("#clearBtn").textContent = i18n[lang].clear;
+        $("#searchBtn").textContent = i18n[lang].searchBtn;
+        $("#exportBtn").textContent = i18n[lang].exportBtn;
+        $("#drop").querySelector("div").textContent = i18n[
+          lang
+        ].dropHint.replace("chọn tệp", "chọn tệp");
+        updateCount(0);
+      }
+
+      // ========= File handling =========
+      function addFiles(fileList) {
+        for (const file of fileList) {
+          const ext = file.name.toLowerCase().split(".").pop();
+          if (!["pdf", "pptx"].includes(ext)) continue;
+          state.files.push({
+            file,
+            name: file.name,
+            size: file.size,
+            type: ext,
+          });
+        }
+        renderFiles();
+        $("#buildBtn").disabled = state.files.length === 0;
+      }
+      function renderFiles() {
+        const box = $("#fileList");
+        box.innerHTML = "";
+        for (const f of state.files) {
+          const div = document.createElement("div");
+          div.className = "file";
+          div.innerHTML = `<span class="type">${f.type.toUpperCase()}</span>
+        <div style="flex:1">${escapeHtml(f.name)}</div>
+        <div class="muted">${(f.size / 1024 / 1024).toFixed(2)} MB</div>`;
+          box.appendChild(div);
+        }
+        state.built = false;
+        $("#idxState").textContent = i18n[$("#lang").value].idxIdle;
+        $("#searchBtn").disabled = true;
+        $("#exportBtn").disabled = true;
+      }
+
+      // ========= Index building =========
+      async function buildIndex() {
+        if (state.files.length === 0) return;
+        const hasPdfJs = typeof pdfjsLib !== "undefined";
+        if (!hasPdfJs) {
+          console.warn(
+            "PDF.js not loaded: PDF files will be skipped. PPTX still supported."
+          );
+          const dropHint = document.querySelector("#drop .hint");
+          if (dropHint) {
+            dropHint.textContent =
+              "PDF.js chưa sẵn sàng: vẫn có thể lập chỉ mục PPTX. PDF sẽ bị bỏ qua.";
+            dropHint.style.color = "var(--danger)";
+          }
+        }
+        state.docs = [];
+        state.built = false;
+        $("#idxState").textContent = i18n[$("#lang").value].idxBuilding;
+
+        for (let i = 0; i < state.files.length; i++) {
+          const f = state.files[i];
+          if (f.type === "pdf") {
+            if (!hasPdfJs) {
+              // Skip PDF indexing gracefully
+              state.docs.push({
+                id: crypto.randomUUID(),
+                name: f.name + " (PDF không lập chỉ mục)",
+                type: "pdf",
+                pages: [],
+                _pdfSkipped: true,
+              });
+              continue;
+            }
+            const arrayBuf = await f.file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
+            const pages = [];
+            for (let p = 1; p <= pdf.numPages; p++) {
+              const page = await pdf.getPage(p);
+              const content = await page.getTextContent();
+              const text = content.items.map((it) => it.str).join(" ");
+              pages.push({ index: p, text, _pdfPageRef: p, _pdfDoc: pdf });
+            }
+            state.docs.push({
+              id: crypto.randomUUID(),
+              name: f.name,
+              type: "pdf",
+              pages,
+              _pdf: true,
+            });
+          } else if (f.type === "pptx") {
+            const arrayBuf = await f.file.arrayBuffer();
+            const zip = await JSZip.loadAsync(arrayBuf);
+            // Read slides: ppt/slides/slide1.xml ... + rels for order
+            const slides = [];
+            const slideFiles = Object.keys(zip.files)
+              .filter(
+                (k) => k.startsWith("ppt/slides/slide") && k.endsWith(".xml")
+              )
+              .sort((a, b) => {
+                // sort by number
+                const na = parseInt(a.match(/slide(\d+)\.xml/)[1]);
+                const nb = parseInt(b.match(/slide(\d+)\.xml/)[1]);
+                return na - nb;
+              });
+            for (const path of slideFiles) {
+              const xml = await zip.files[path].async("string");
+              // Extract <a:t>text</a:t>
+              const texts = Array.from(
+                xml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/g)
+              )
+                .map((m) => m[1])
+                .map((s) => s.replace(/\s+/g, " ").trim());
+              slides.push({ index: slides.length + 1, text: texts.join(" ") });
+            }
+            state.docs.push({
+              id: crypto.randomUUID(),
+              name: f.name,
+              type: "pptx",
+              pages: slides,
+              _pptx: true,
+            });
+          }
+        }
+        state.built = true;
+        $("#idxState").textContent = i18n[$("#lang").value].idxDone;
+        $("#searchBtn").disabled = false;
+        $("#exportBtn").disabled = false;
+      }
+
+      // ========= Search =========
+      function normalizeForMatch(s, diacritic, caseSensitive) {
+        let t = s || "";
+        if (diacritic) t = stripVi(t);
+        if (!caseSensitive) t = t.toLowerCase();
+        return t;
+      }
+      function matchPositions(text, query, wholeWord) {
+        const positions = [];
+        if (!query) return positions;
+        const pattern = wholeWord
+          ? new RegExp(
+              `(^|[^\p{L}\p{N}_])(${escapeReg(query)})(?=$|[^\p{L}\p{N}_])`,
+              "giu"
+            )
+          : new RegExp(`(${escapeReg(query)})`, "giu");
+        let m;
+        let guard = 0;
+        const MAX = 5000;
+        while ((m = pattern.exec(text)) && guard < MAX) {
+          guard++;
+          positions.push({
+            start: m.index + (wholeWord ? m[1].length : 0),
+            end:
+              m.index + (wholeWord ? m[1].length : 0) + m[2]?.length ||
+              m[1]?.length ||
+              query.length,
+          });
+          if (pattern.lastIndex === m.index) pattern.lastIndex++; // avoid zero-length loops
+        }
+        return positions;
+      }
+      function escapeReg(s) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      function highlightSnippet(raw, normRaw, normQuery, ranges) {
+        if (!ranges.length) return escapeHtml(raw.slice(0, 220));
+        // pick the first range to center snippet
+        const r = ranges[0];
+        const start = Math.max(0, r.start - 60);
+        const end = Math.min(normRaw.length, r.end + 120);
+        const rawSlice = raw.substring(start, end);
+
+        // naive highlighter by replacing occurrences in the slice using normalized comparison
+        const out = [];
+        let i = 0;
+        const rawNormSlice = normRaw.substring(start, end);
+        const q = normQuery;
+        const pattern = new RegExp(escapeReg(q), "gi");
+        let lastIndex = 0;
+        let m;
+        while ((m = pattern.exec(rawNormSlice))) {
+          const pre = rawSlice.substring(lastIndex, m.index);
+          const hit = rawSlice.substring(m.index, m.index + q.length);
+          out.push(escapeHtml(pre));
+          out.push(`<mark>${escapeHtml(hit)}</mark>`);
+          lastIndex = m.index + q.length;
+        }
+        out.push(escapeHtml(rawSlice.substring(lastIndex)));
+        return (
+          (start > 0 ? "…" : "") +
+          out.join("") +
+          (end < normRaw.length ? "…" : "")
+        );
+      }
+
+      function search() {
+        const q = $("#q").value.trim();
+        const diacritic = $("#optDiacritic").checked;
+        const caseSensitive = $("#optCase").checked;
+        const whole = $("#optWhole").checked;
+        const results = [];
+        if (!state.built || !q) {
+          renderResults([]);
+          return;
+        }
+
+        const normQuery = normalizeForMatch(q, diacritic, caseSensitive);
+
+        for (const doc of state.docs) {
+          for (const page of doc.pages) {
+            const raw = page.text || "";
+            const normRaw = normalizeForMatch(raw, diacritic, caseSensitive);
+            // quick contains check
+            if (!normRaw || !normQuery) continue;
+            const positions = matchPositions(normRaw, normQuery, whole);
+            if (positions.length) {
+              results.push({
+                docId: doc.id,
+                docName: doc.name,
+                type: doc.type,
+                pageIndex: page.index,
+                snippet: highlightSnippet(raw, normRaw, normQuery, positions),
+                count: positions.length,
+              });
+            }
+          }
+        }
+
+        // sort: most hits first, then name, then page
+        results.sort(
+          (a, b) =>
+            b.count - a.count ||
+            a.docName.localeCompare(b.docName) ||
+            a.pageIndex - b.pageIndex
+        );
+        renderResults(results);
+      }
+
+      function updateCount(n) {
+        const lang = $("#lang").value;
+        $("#countInfo").textContent = n
+          ? i18n[lang].haveRes(n)
+          : i18n[lang].noRes;
+      }
+
+      function renderResults(items) {
+        const box = $("#results");
+        box.innerHTML = "";
+        updateCount(items.length);
+        if (!items.length) {
+          return;
+        }
+        for (const it of items) {
+          const el = document.createElement("div");
+          el.className = "result";
+          const tag = it.type === "pdf" ? "PDF" : "PPTX";
+          const label =
+            it.type === "pdf"
+              ? `Trang ${it.pageIndex}`
+              : `Slide ${it.pageIndex}`;
+          el.innerHTML = `
+        <div class="meta">
+          <div class="tag">${tag}</div>
+          <div class="title">${escapeHtml(it.docName)}</div>
+          <div class="muted">${escapeHtml(label)}</div>
+        </div>
+        <div style="flex:1">
+          <div class="snippet">${it.snippet}</div>
+          <div style="margin-top:8px; display:flex; gap:8px">
+            <button class="btn secondary" data-open>Open</button>
+            <span class="muted">${it.count} hit(s)</span>
+          </div>
+        </div>`;
+          el.querySelector("[data-open]").addEventListener("click", () =>
+            openViewer(it.docId, it.pageIndex)
+          );
+          box.appendChild(el);
+        }
+      }
+
+      // ========= Viewer =========
+      function openViewer(docId, pageIndex) {
+        const doc = state.docs.find((d) => d.id === docId);
+        if (!doc) return;
+        $("#viewerModal").style.display = "flex";
+        $("#viewerTitle").textContent = `${doc.name} — ${
+          doc.type === "pdf" ? "Trang" : "Slide"
+        } ${pageIndex}`;
+        state.currentView = { docId, pageIndex };
+
+        if (doc.type === "pdf") {
+          $("#pptxContainer").style.display = "none";
+          $("#pdfContainer").style.display = "flex";
+          renderPdfPage(doc, pageIndex);
+        } else {
+          $("#pdfContainer").style.display = "none";
+          $("#pptxContainer").style.display = "block";
+          const pg = doc.pages.find((p) => p.index === pageIndex);
+          $(
+            "#pptxContainer"
+          ).innerHTML = `<div class="muted">Văn bản trong slide:</div><div style="margin-top:8px">${escapeHtml(
+            pg?.text || ""
+          )}</div>`;
+        }
+      }
+      async function renderPdfPage(doc, pageIndex) {
+        const canvas = $("#pdfCanvas");
+        const ctx = canvas.getContext("2d");
+        const page = await doc.pages[pageIndex - 1]._pdfDoc.getPage(pageIndex);
+        const viewport = page.getViewport({ scale: 1.5 });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: ctx, viewport }).promise;
+      }
+
+      function closeViewer() {
+        $("#viewerModal").style.display = "none";
+        state.currentView = null;
+      }
+      $("#closeViewer").addEventListener("click", closeViewer);
+      window.addEventListener("keydown", (e) => {
+        if (!state.currentView) return;
+        const doc = state.docs.find((d) => d.id === state.currentView.docId);
+        if (e.key === "Escape") {
+          closeViewer();
+        }
+        if (e.key === "PageDown") {
+          const next = Math.min(
+            doc.pages.length,
+            state.currentView.pageIndex + 1
+          );
+          if (next !== state.currentView.pageIndex) openViewer(doc.id, next);
+        }
+        if (e.key === "PageUp") {
+          const prev = Math.max(1, state.currentView.pageIndex - 1);
+          if (prev !== state.currentView.pageIndex) openViewer(doc.id, prev);
+        }
+      });
+
+      // ========= Export =========
+      function exportCSV() {
+        const rows = [
+          ["File", "Loại", "Trang/Slide", "Số lần trùng", "Trích dẫn"],
+        ];
+        const resNodes = Array.from(document.querySelectorAll(".result"));
+        for (const node of resNodes) {
+          const file = node.querySelector(".title").textContent.trim();
+          const type = node.querySelector(".tag").textContent.trim();
+          const label = node.querySelector(".muted").textContent.trim();
+          const hits = node.querySelectorAll(".snippet mark").length;
+          const snippet = node.querySelector(".snippet").textContent.trim();
+          rows.push([file, type, label, hits, snippet]);
+        }
+        const csv = rows
+          .map((r) => r.map((x) => '"' + x.replace(/"/g, '""') + '"').join(","))
+          .join("\n");
+        downloadBlob(csv, "ket_qua_tim_kiem.csv");
+      }
+
+      // ========= Wire UI =========
+      $("#chooseBtn").addEventListener("click", () => $("#fileInput").click());
+      $("#fileInput").addEventListener("change", (e) => {
+        addFiles(e.target.files);
+        e.target.value = "";
+      });
+      $("#clearBtn").addEventListener("click", () => {
+        state.files = [];
+        state.docs = [];
+        renderFiles();
+        $("#results").innerHTML = "";
+        updateCount(0);
+      });
+      $("#buildBtn").addEventListener("click", () => buildIndex());
+      $("#searchBtn").addEventListener("click", () => search());
+      $("#exportBtn").addEventListener("click", () => exportCSV());
+      $("#q").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") search();
+      });
+
+      // Drag & drop
+      const drop = $("#drop");
+      drop.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        drop.classList.add("drag");
+      });
+      drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+      drop.addEventListener("drop", (e) => {
+        e.preventDefault();
+        drop.classList.remove("drag");
+        addFiles(e.dataTransfer.files);
+      });
+
+      // Language
+      $("#lang").addEventListener("change", (e) => setLang(e.target.value));
+      setLang("vi");
+    </script>
+
+    <script>
+      // Adapt UI when PDF.js loads or fails
+      document.addEventListener("pdfjs-ready", () => {
+        const hint = document.querySelector("#drop .hint");
+        if (hint) {
+          hint.textContent =
+            document.documentElement.lang === "vi"
+              ? "PDF.js đã sẵn sàng. Hỗ trợ PDF & PPTX (có thể dùng offline nếu CDN đã cache)."
+              : "PDF.js ready. PDF & PPTX supported (may work offline if cached).";
+          hint.style.color = "var(--muted)";
+        }
+      });
+      document.addEventListener("pdfjs-failed", () => {
+        const hint = document.querySelector("#drop .hint");
+        if (hint) {
+          hint.textContent =
+            document.documentElement.lang === "vi"
+              ? "Không tải được PDF.js. Vẫn có thể lập chỉ mục PPTX. (Để offline hoàn toàn, tải pdf.min.js & pdf.worker.min.js về local.)"
+              : "Failed to load PDF.js. PPTX indexing still works. (For full offline, host pdf.min.js & pdf.worker.min.js locally.)";
+          hint.style.color = "var(--danger)";
+        }
+      });
+    </script>
+  </body>
+</html>
